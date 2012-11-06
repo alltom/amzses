@@ -45,16 +45,24 @@ func InitAuth(accessKey, secretKey string) *SES {
 	return &SES{accessKey, secretKey}
 }
 
-func (ses *SES) SendMail(from, to, subject, body string) (string, error) {
-	data := make(url.Values)
+func (ses *SES) sendMail(from, to, subject, body, format string) (string, error) {
+  data := make(url.Values)
 	data.Add("Action", "SendEmail")
 	data.Add("Source", from)
 	data.Add("Destination.ToAddresses.member.1", to)
 	data.Add("Message.Subject.Data", subject)
-	data.Add("Message.Body.Text.Data", body)
+	data.Add(fmt.Sprintf("Message.Body.%s.Data", format), body)
 	data.Add("AWSAccessKeyId", ses.accessKey)
 
 	return ses.sesGet(data)
+}
+
+func (ses *SES) SendMail(from, to, subject, body string) (string, error) {
+	return ses.sendMail(from, to, subject, body, "Text")
+}
+
+func (ses *SES) SendHTMLMail(from, to, subject, body string) (string, error) {
+  return ses.sendMail(from, to, subject, "Html")
 }
 
 func (ses *SES) authorizationHeader(date string) []string {
